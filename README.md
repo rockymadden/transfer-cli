@@ -36,7 +36,7 @@ https://transfer.sh/abcXYZ/path.tar.gz
 $ # From piped input:
 $ ls | transfer upload --slug ls.log
 ######################################################################## 100.0%
-https://transfer.sh/abcXYZ/path.tar.gz
+https://transfer.sh/abcXYZ/ls.log
 
 $ # Custom slug via argument:
 $ transfer upload /path/to/file.log custom.log
