@@ -1,0 +1,73 @@
+#!/usr/bin/env bats
+
+@test 'upload via arguments should succeed' {
+  run bash -c 'build/bin/transfer upload src/transfer 2> /dev/null'
+  [ ${status} -eq 0 ]
+  [ $(expr "${output}" : '^https://transfer.sh/[a-zA-Z0-9]*/transfer$') -gt 0 ]
+}
+
+@test 'upload with slug via arguments should succeed' {
+  run bash -c 'build/bin/transfer upload src/transfer foo 2> /dev/null'
+  [ ${status} -eq 0 ]
+  [ $(expr "${output}" : '^https://transfer.sh/[a-zA-Z0-9]*/foo$') -gt 0 ]
+}
+
+@test 'upload via options should succeed' {
+  run bash -c 'build/bin/transfer upload --file src/transfer 2> /dev/null'
+  [ ${status} -eq 0 ]
+  [ $(expr "${output}" : '^https://transfer.sh/[a-zA-Z0-9]*/transfer$') -gt 0 ]
+}
+
+@test 'upload with slug via options should succeed' {
+  run bash -c 'build/bin/transfer upload --file src/transfer --slug foo 2> /dev/null'
+  [ ${status} -eq 0 ]
+  [ $(expr "${output}" : '^https://transfer.sh/[a-zA-Z0-9]*/foo$') -gt 0 ]
+}
+
+@test 'upload from pipe should succeed' {
+  run bash -c 'cat src/transfer | build/bin/transfer upload --slug transfer 2> /dev/null'
+  [ ${status} -eq 0 ]
+  [ $(expr "${output}" : '^https://transfer.sh/[a-zA-Z0-9]*/transfer$') -gt 0 ]
+}
+
+@test 'upload of directory should succeed' {
+  run bash -c 'build/bin/transfer upload src transfer.tar.gz 2> /dev/null'
+  [ ${status} -eq 0 ]
+  [ $(expr "${output}" : '^https://transfer.sh/[a-zA-Z0-9]*/transfer.tar.gz$') -gt 0 ]
+}
+
+@test 'download to file should succeed' {
+  local up=$(build/bin/transfer upload src/transfer 2> /dev/null)
+  run bash -c "build/bin/transfer download "${up}" build/.download 2> /dev/null"
+  [ ${status} -eq 0 ]
+}
+
+@test 'download to pipe should succeed' {
+  local up=$(build/bin/transfer upload src/transfer 2> /dev/null)
+  run bash -c "build/bin/transfer download "${up}" 2> /dev/null"
+  [ ${status} -eq 0 ]
+}
+
+@test '-h should output usage' {
+  run build/bin/transfer -h
+  [ ${status} -eq 0 ]
+  [ "${#lines[@]}" -gt 1 ]
+}
+
+@test '--help should output usage' {
+  run build/bin/transfer --help
+  [ ${status} -eq 0 ]
+  [ "${#lines[@]}" -gt 1 ]
+}
+
+@test '-v should output version' {
+  run build/bin/transfer -v
+  [ ${status} -eq 0 ]
+  [ $(expr "${output}" : 'v*') -ne 0 ]
+}
+
+@test '--version should output version' {
+  run build/bin/transfer --version
+  [ ${status} -eq 0 ]
+  [ $(expr "${output}" : 'v*') -ne 0 ]
+}

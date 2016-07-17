@@ -1,0 +1,125 @@
+#!/usr/bin/env bash
+
+# COMMAND PARSING #################################################################################
+cmd="${1}" ; shift
+
+# STDIN FRIENDLINESS ##############################################################################
+case "${cmd}" in
+  upload) [ -p /dev/stdin ] && stdin=$(cat <&0) ;;
+esac
+
+# ARGUMENT AND OPTION PARSING #####################################################################
+while (( "$#" )); do
+  case "${1}" in
+    --file=*) file=${1/--file=/''} ; shift ;;
+    --file*|-f*) file=${2} ; shift ; shift ;;
+    --slug=*) slug=${1/--slug=/''} ; shift ;;
+    --slug*|-s*) slug=${2} ; shift ; shift ;;
+    --trace|-x) trace='set -x' ; shift ;;
+    --url=*) url=${1/--url=/''} ; shift ;;
+    --url*|-u*) url=${2} ; shift ; shift ;;
+    *)
+      case "${cmd}" in
+        download)
+          [ -n "${1}" ] && [ -n "${url}" ] && [ -z "${file}" ] && file=${1}
+          [ -n "${1}" ] && [ -z "${url}" ] && url=${1}
+        ;;
+        upload)
+          [ -n "${1}" ] && [ -n "${file}" ] && [ -z "${slug}" ] && slug=${1}
+          [ -n "${1}" ] && [ -z "${file}" ] && file=${1}
+        ;;
+      esac
+      shift
+    ;;
+  esac
+done
+
+# TRACING #########################################################################################
+${trace}
+
+# ARGUMENT AND OPTION PROMPTING ###################################################################
+case "${cmd}" in
+  download)
+    [ -z "${url}" ] && read -e -p 'Enter url (e.g. https://transfer.sh/aBcxYZ/file.tar.gz): ' url
+  ;;
+  upload)
+    [ -z "${file}" ] && read -e -p 'Enter file (e.g. /path/to/file.tar.gz): ' file
+    [ -z "${file}" ] && [ -z "${slug}" ] && read -e -p 'Enter slug (e.g. file.tar.gz): ' slug
+  ;;
+esac
+
+# COMMAND FUNCTIONS ###############################################################################
+function download() {
+  if [ -n "${file}" ]; then
+    local path=$(greadlink -f "${file}" 2> /dev/null || readlink -f "${file}" 2> /dev/null)
+
+    curl --progress-bar "${url}" -o "${path}"
+    echo "${path}"
+    type pbcopy &> /dev/null && echo -n ${path} | pbcopy
+  else
+    curl --silent "${url}" 2>/dev/null
+  fi
+}
+
+function help() {
+  local a=(${0//\// })
+  local bin=${a[${#a[@]}-1]}
+
+  echo 'Usage:'
+  echo "  ${bin} download [<url> [file]]"
+  echo '    [--file|-f <file>] [--trace|-x] [--url|-u <url>]'
+  echo
+  echo "  ${bin} upload [<file> [slug]]"
+  echo '    [--file|-f <file>] [--slug|-s <slug>] [--trace|-x]'
+  echo
+  echo 'Commands:'
+  echo '  download    Download from transfer.sh to file or piped output'
+  echo '  upload      Upload a file, directory, or piped input to transfer.sh'
+  echo
+  echo 'More Information:'
+  echo '  chat    https://rockymadden-slack.herokuapp.com'
+  echo '  repo    https://github.com/rockymadden/transfer-cli'
+}
+
+function upload() {
+  local tmpurl=$(mktemp -t transfer.url)
+  trap "rm -f ${tmpurl}" 0
+
+  if [ -n "${file}" ]; then
+    if [ -d ${file} ]; then
+      [ -z "${slug}" ] && slug="$(basename ${file} | sed -e 's/[^a-zA-Z0-9._-]/-/g').tar.gz"
+      local tmptar=$(mktemp -t transfer.tar.gz)
+      trap "rm -f ${tmpurl} ; rm -f ${tmptar}" 0
+      (cd $(dirname ${file}); tar -zcf ${tmptar} $(basename ${file}))
+      curl --progress-bar --upload-file "${tmptar}" "https://transfer.sh/${slug}" > ${tmpurl}
+    elif [ -f "${file}" ]; then
+      [ -z "${slug}" ] && slug="$(basename ${file} | sed -e 's/[^a-zA-Z0-9._-]/-/g')"
+      curl --progress-bar --upload-file "${file}" "https://transfer.sh/${slug}" > ${tmpurl}
+    else
+      echo 'File should exist' ; return 1
+    fi
+  elif [ -n "${stdin}" ]; then
+    if [ -n "${slug}" ]; then
+      echo "${stdin}" | curl --progress-bar --upload-file - "https://transfer.sh/${slug}" > ${tmpurl}
+    else
+      echo 'Slug should be provided' ; return 1
+    fi
+  else
+    echo 'File should be provided' ; return 1
+  fi
+
+  cat ${tmpurl}
+  type pbcopy &> /dev/null && cat ${tmpurl} | tr -d '\n' | pbcopy
+}
+
+function version() {
+  echo 'v0.0.0'
+}
+
+# COMMAND ROUTING #################################################################################
+case "${cmd}" in
+  --help|-h) help ; exit 0 ;;
+  --version|-v) version ; exit 0 ;;
+  download|upload) ${cmd} ; exit ${?} ;;
+  *) help ; exit 1 ;;
+esac
