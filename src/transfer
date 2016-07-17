@@ -82,13 +82,13 @@ function help() {
 }
 
 function upload() {
-  local tmpurl=$(mktemp -t transfer.url)
+  local tmpurl=$(mktemp -t transfer.url.XXXXXXXX)
   trap "rm -f ${tmpurl}" 0
 
   if [ -n "${file}" ]; then
     if [ -d ${file} ]; then
       [ -z "${slug}" ] && slug="$(basename ${file} | sed -e 's/[^a-zA-Z0-9._-]/-/g').tar.gz"
-      local tmptar=$(mktemp -t transfer.tar.gz)
+      local tmptar=$(mktemp -t transfer.tar.gz.XXXXXXXX)
       trap "rm -f ${tmpurl} ; rm -f ${tmptar}" 0
       (cd $(dirname ${file}); tar -zcf ${tmptar} $(basename ${file}))
       curl --progress-bar --upload-file "${tmptar}" "https://transfer.sh/${slug}" > ${tmpurl}
