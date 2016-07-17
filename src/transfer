@@ -109,7 +109,7 @@ function upload() {
   fi
 
   cat ${tmpurl}
-  type pbcopy &> /dev/null && cat ${tmpurl} | tr -d '\n' | pbcopy
+  if type pbcopy &> /dev/null; then cat ${tmpurl} | tr -d '\n' | pbcopy; fi
 }
 
 function version() {
