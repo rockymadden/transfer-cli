@@ -10,7 +10,7 @@
 A pure bash, pipe friendly, feature rich, command line interface for
 [transfer.sh](https://transfer.sh) with encryption options coming soon.
 
-__Upload:__
+__Upload samples:__
 
 ```bash
 $ # From file via argument:
@@ -49,7 +49,7 @@ $ transfer upload /path/to/file.log --slug custom.log
 https://transfer.sh/abcXYZ/custom.log
 ```
 
-__Download:__
+__Download samples:__
 
 ```bash
 $ # To file via argument:
