@@ -55,7 +55,7 @@ function download() {
 
     curl --progress-bar "${url}" -o "${path}"
     echo "${path}"
-    type pbcopy &> /dev/null && echo -n ${path} | pbcopy
+    if type pbcopy &> /dev/null; then echo -n ${path} | pbcopy; fi
   else
     curl --silent "${url}" 2>/dev/null
   fi
