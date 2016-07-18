@@ -13,18 +13,8 @@ A pure bash, pipe friendly, feature rich, command line interface for
 __Upload samples:__
 
 ```bash
-$ # From file via argument:
+$ # From file:
 $ transfer upload /path/to/file.log
-######################################################################## 100.0%
-https://transfer.sh/abcXYZ/file.log
-
-$ # From file via option:
-$ transfer upload --file /path/to/file.log
-######################################################################## 100.0%
-https://transfer.sh/abcXYZ/file.log
-
-$ # From file via short form option:
-$ transfer upload -f /path/to/file.log
 ######################################################################## 100.0%
 https://transfer.sh/abcXYZ/file.log
 
@@ -33,7 +23,7 @@ $ transfer upload /path
 ######################################################################## 100.0%
 https://transfer.sh/abcXYZ/path.tar.gz
 
-$ # From piped input:
+$ # From pipe:
 $ ls | transfer upload --slug ls.log
 ######################################################################## 100.0%
 https://transfer.sh/abcXYZ/ls.log
@@ -42,27 +32,17 @@ $ # Custom slug via argument:
 $ transfer upload /path/to/file.log custom.log
 ######################################################################## 100.0%
 https://transfer.sh/abcXYZ/custom.log
-
-$ # Custom slug via option:
-$ transfer upload /path/to/file.log --slug custom.log
-######################################################################## 100.0%
-https://transfer.sh/abcXYZ/custom.log
 ```
 
 __Download samples:__
 
 ```bash
-$ # To file via argument:
+$ # To file:
 $ transfer download https://transfer.sh/abcXYZ/file.log /tmp/file.log
 ######################################################################## 100.0%
 /tmp/file.log
 
-$ # To file via option:
-$ transfer download https://transfer.sh/abcXYZ/file.log --file /tmp/file.log
-######################################################################## 100.0%
-/tmp/file.log
-
-$ # To piped output:
+$ # To pipe:
 $ transfer download https://transfer.sh/abcXYZ/file.tar.gz | tar xz
 ```
 
