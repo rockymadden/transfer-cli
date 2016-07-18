@@ -7,31 +7,38 @@
 [![chat](http://img.shields.io/badge/chat-slack-blue.svg)](https://rockymadden-slack.herokuapp.com/)
 [![circleci](https://circleci.com/gh/rockymadden/transfer-cli.svg?style=shield)](https://circleci.com/gh/rockymadden/transfer-cli)
 
-A pure bash, pipe friendly, feature rich, command line interface for
-[transfer.sh](https://transfer.sh) with encryption options coming soon.
+A pure bash, pipe friendly, encryption capable, feature rich, command line interface for
+[transfer.sh](https://transfer.sh).
 
 __Upload samples:__
 
 ```bash
 $ # From file:
 $ transfer upload /path/to/file.log
-######################################################################## 100.0%
-https://transfer.sh/abcXYZ/file.log
+$ transfer upload --file=/path/to/file.log
+$ transfer upload --file /path/to/file.log
+$ transfer upload -f /path/to/file.log
 
 $ # From directory:
 $ transfer upload /path
-######################################################################## 100.0%
-https://transfer.sh/abcXYZ/path.tar.gz
+$ transfer upload --file=/path
+$ transfer upload --file /path
+$ transfer upload -f /path
 
 $ # From pipe:
+$ ls | transfer upload --slug=ls.log
 $ ls | transfer upload --slug ls.log
-######################################################################## 100.0%
-https://transfer.sh/abcXYZ/ls.log
+$ ls | transfer upload -s ls.log
 
-$ # Custom slug via argument:
+$ # With encryption (symmetric):
+$ transfer upload /path/to/file.log --encrypt
+$ transfer upload /path/to/file.log -e
+
+$ # With custom slug:
 $ transfer upload /path/to/file.log custom.log
-######################################################################## 100.0%
-https://transfer.sh/abcXYZ/custom.log
+$ transfer upload --file=/path/to/file.log --slug=custom.log
+$ transfer upload --file /path/to/file.log --slug custom.log
+$ transfer upload -f /path/to/file.log -s custom.log
 ```
 
 __Download samples:__
@@ -39,11 +46,19 @@ __Download samples:__
 ```bash
 $ # To file:
 $ transfer download https://transfer.sh/abcXYZ/file.log /tmp/file.log
-######################################################################## 100.0%
-/tmp/file.log
+$ transfer download --url=https://transfer.sh/abcXYZ/file.log --file=/tmp/file.log
+$ transfer download --url https://transfer.sh/abcXYZ/file.log --file /tmp/file.log
+$ transfer download -u https://transfer.sh/abcXYZ/file.log -f /tmp/file.log
 
 $ # To pipe:
 $ transfer download https://transfer.sh/abcXYZ/file.tar.gz | tar xz
+$ transfer download --url=https://transfer.sh/abcXYZ/file.tar.gz | tar xz
+$ transfer download --url https://transfer.sh/abcXYZ/file.tar.gz | tar xz
+$ transfer download -u https://transfer.sh/abcXYZ/file.tar.gz | tar xz
+
+$ # With decryption (symmetric):
+$ transfer download https://transfer.sh/abcXYZ/file.tar.gz --decrypt
+$ transfer download https://transfer.sh/abcXYZ/file.tar.gz -d
 ```
 
 ## Installation
