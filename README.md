@@ -57,8 +57,8 @@ $ transfer download --url https://transfer.sh/abcXYZ/file.tar.gz | tar xz
 $ transfer download -u https://transfer.sh/abcXYZ/file.tar.gz | tar xz
 
 $ # With decryption (symmetric):
-$ transfer download https://transfer.sh/abcXYZ/file.tar.gz --decrypt
-$ transfer download https://transfer.sh/abcXYZ/file.tar.gz -d
+$ transfer download https://transfer.sh/abcXYZ/file.log --decrypt
+$ transfer download https://transfer.sh/abcXYZ/file.log -d
 ```
 
 ## Installation

@@ -42,11 +42,11 @@ ${trace}
 # ARGUMENT AND OPTION PROMPTING ###################################################################
 case "${cmd}" in
   download)
-    [ -z "${url}" ] && read -e -p 'Enter url (e.g. https://transfer.sh/aBcxYZ/file.tar.gz): ' url
+    [ -z "${url}" ] && read -e -p 'Enter url (e.g. https://transfer.sh/abcXYZ/file.log): ' url
   ;;
   upload)
-    [ -z "${file}" ] && read -e -p 'Enter file (e.g. /path/to/file.tar.gz): ' file
-    [ -z "${file}" ] && [ -z "${slug}" ] && read -e -p 'Enter slug (e.g. file.tar.gz): ' slug
+    [ -z "${file}" ] && read -e -p 'Enter file (e.g. /path/to/file.log): ' file
+    [ -z "${file}" ] && [ -z "${slug}" ] && read -e -p 'Enter slug (e.g. file.log): ' slug
   ;;
 esac
 
