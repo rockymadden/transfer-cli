@@ -11,6 +11,8 @@ esac
 # ARGUMENT AND OPTION PARSING #####################################################################
 while (( "$#" )); do
   case "${1}" in
+    --decrypt|-d) decrypt=0 ; shift ;;
+    --encrypt|-e) encrypt=0 ; shift ;;
     --file=*) file=${1/--file=/''} ; shift ;;
     --file*|-f*) file=${2} ; shift ; shift ;;
     --slug=*) slug=${1/--slug=/''} ; shift ;;
@@ -40,11 +42,11 @@ ${trace}
 # ARGUMENT AND OPTION PROMPTING ###################################################################
 case "${cmd}" in
   download)
-    [ -z "${url}" ] && read -e -p 'Enter url (e.g. https://transfer.sh/aBcxYZ/file.tar.gz): ' url
+    [ -z "${url}" ] && read -e -p 'Enter url (e.g. https://transfer.sh/abcXYZ/file.log): ' url
   ;;
   upload)
-    [ -z "${file}" ] && read -e -p 'Enter file (e.g. /path/to/file.tar.gz): ' file
-    [ -z "${file}" ] && [ -z "${slug}" ] && read -e -p 'Enter slug (e.g. file.tar.gz): ' slug
+    [ -z "${file}" ] && read -e -p 'Enter file (e.g. /path/to/file.log): ' file
+    [ -z "${file}" ] && [ -z "${slug}" ] && read -e -p 'Enter slug (e.g. file.log): ' slug
   ;;
 esac
 
@@ -53,11 +55,20 @@ function download() {
   if [ -n "${file}" ]; then
     local path=$(greadlink -f "${file}" 2> /dev/null || readlink -f "${file}" 2> /dev/null)
 
-    curl --progress-bar "${url}" -o "${path}"
+    if [ -n "${decrypt}" ]; then
+      curl --progress-bar "${url}" | openssl aes-256-cbc -d -a -out "${file}"
+    else
+      curl --progress-bar "${url}" -o "${path}"
+    fi
+
     echo "${path}"
     if type pbcopy &> /dev/null; then echo -n ${path} | pbcopy; fi
   else
-    curl --silent "${url}" 2>/dev/null
+    if [ -n "${decrypt}" ]; then
+      curl --silent "${url}" 2>/dev/null | openssl aes-256-cbc -d -a
+    else
+      curl --silent "${url}" 2>/dev/null
+    fi
   fi
 }
 
@@ -67,10 +78,10 @@ function help() {
 
   echo 'Usage:'
   echo "  ${bin} download [<url> [file]]"
-  echo '    [--file|-f <file>] [--trace|-x] [--url|-u <url>]'
+  echo '    [--decrypt|-d] [--file|-f <file>] [--trace|-x] [--url|-u <url>]'
   echo
   echo "  ${bin} upload [<file> [slug]]"
-  echo '    [--file|-f <file>] [--slug|-s <slug>] [--trace|-x]'
+  echo '    [--encrypt|-e] [--file|-f <file>] [--slug|-s <slug>] [--trace|-x]'
   echo
   echo 'Commands:'
   echo '  download    Download from transfer.sh to file or piped output'
@@ -91,16 +102,35 @@ function upload() {
       local tmptar=$(mktemp -t transfer.tar.gz.XXXXXXXX)
       trap "rm -f ${tmpurl} ; rm -f ${tmptar}" 0
       (cd $(dirname ${file}); tar -zcf ${tmptar} $(basename ${file}))
-      curl --progress-bar --upload-file "${tmptar}" "https://transfer.sh/${slug}" > ${tmpurl}
+
+      if [ -n "${encrypt}" ]; then
+        openssl aes-256-cbc -a -salt -in "${tmptar}" |
+          curl --progress-bar --upload-file - "https://transfer.sh/${slug}" > ${tmpurl}
+      else
+        curl --progress-bar --upload-file "${tmptar}" "https://transfer.sh/${slug}" > ${tmpurl}
+      fi
     elif [ -f "${file}" ]; then
       [ -z "${slug}" ] && slug="$(basename ${file} | sed -e 's/[^a-zA-Z0-9._-]/-/g')"
-      curl --progress-bar --upload-file "${file}" "https://transfer.sh/${slug}" > ${tmpurl}
+
+      if [ -n "${encrypt}" ]; then
+        openssl aes-256-cbc -a -salt -in "${file}" |
+          curl --progress-bar --upload-file - "https://transfer.sh/${slug}" > ${tmpurl}
+      else
+        curl --progress-bar --upload-file "${file}" "https://transfer.sh/${slug}" > ${tmpurl}
+      fi
     else
       echo 'File should exist' ; return 1
     fi
   elif [ -n "${stdin}" ]; then
     if [ -n "${slug}" ]; then
-      echo "${stdin}" | curl --progress-bar --upload-file - "https://transfer.sh/${slug}" > ${tmpurl}
+      if [ -n "${encrypt}" ]; then
+        echo "${stdin}" |
+          openssl aes-256-cbc -a -salt |
+          curl --progress-bar --upload-file - "https://transfer.sh/${slug}" > ${tmpurl}
+      else
+        echo "${stdin}" |
+          curl --progress-bar --upload-file - "https://transfer.sh/${slug}" > ${tmpurl}
+      fi
     else
       echo 'Slug should be provided' ; return 1
     fi
