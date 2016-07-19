@@ -127,7 +127,7 @@ function upload() {
 }
 
 function version() {
-  echo 'v0.1.0'
+  echo 'v0.2.0'
 }
 
 # COMMAND ROUTING #################################################################################
