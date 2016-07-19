@@ -90,10 +90,12 @@ $ make install bindir=/path/to/bin
 $ transfer --help
 Usage:
   transfer download [<url> [file]]
-    [--decrypt|-d] [--file|-f <file>] [--trace|-x] [--url|-u <url>]
+    [--decrypt|-d] [--file|-f <file>] [--password|-p <password>] [--trace|-x]
+    [--url|-u <url>]
 
   transfer upload [<file> [slug]]
-    [--encrypt|-e] [--file|-f <file>] [--slug|-s <slug>] [--trace|-x]
+    [--encrypt|-e] [--file|-f <file>] [--password|-p <password>] [--slug|-s <slug>]
+    [--trace|-x]
 
 Commands:
   download    Download from transfer.sh to file or piped output

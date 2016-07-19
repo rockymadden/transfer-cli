@@ -73,10 +73,12 @@ function help() {
 
   echo 'Usage:'
   echo "  ${bin} download [<url> [file]]"
-  echo '    [--decrypt|-d] [--file|-f <file>] [--trace|-x] [--url|-u <url>]'
+  echo '    [--decrypt|-d] [--file|-f <file>] [--password|-p <password>] [--trace|-x]'
+  echo '    [--url|-u <url>]'
   echo
   echo "  ${bin} upload [<file> [slug]]"
-  echo '    [--encrypt|-e] [--file|-f <file>] [--slug|-s <slug>] [--trace|-x]'
+  echo '    [--encrypt|-e] [--file|-f <file>] [--password|-p <password>] [--slug|-s <slug>]'
+  echo '    [--trace|-x]'
   echo
   echo 'Commands:'
   echo '  download    Download from transfer.sh to file or piped output'
