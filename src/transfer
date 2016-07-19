@@ -15,6 +15,8 @@ while (( "$#" )); do
     --encrypt|-e) encrypt=0 ; shift ;;
     --file=*) file=${1/--file=/''} ; shift ;;
     --file*|-f*) file=${2} ; shift ; shift ;;
+    --password=*) password=${1/--password=/''} ; shift ;;
+    --password*|-p*) password=${2} ; shift ; shift ;;
     --slug=*) slug=${1/--slug=/''} ; shift ;;
     --slug*|-s*) slug=${2} ; shift ; shift ;;
     --trace|-x) trace='set -x' ; shift ;;
@@ -46,7 +48,6 @@ case "${cmd}" in
   ;;
   upload)
     [ -z "${file}" ] && read -e -p 'Enter file (e.g. /path/to/file.log): ' file
-    [ -z "${file}" ] && [ -z "${slug}" ] && read -e -p 'Enter slug (e.g. file.log): ' slug
   ;;
 esac
 
@@ -55,20 +56,14 @@ function download() {
   if [ -n "${file}" ]; then
     local path=$(greadlink -f "${file}" 2> /dev/null || readlink -f "${file}" 2> /dev/null)
 
-    if [ -n "${decrypt}" ]; then
-      curl --progress-bar "${url}" | openssl aes-256-cbc -d -a -out "${file}"
-    else
-      curl --progress-bar "${url}" -o "${path}"
-    fi
+    curl --progress-bar "${url}" |
+      ([ -z "${decrypt}" ] && cat || openssl aes-256-cbc -d -a ${password:+-k "${password}"}) > "${path}"
 
     echo "${path}"
     if type pbcopy &> /dev/null; then echo -n ${path} | pbcopy; fi
   else
-    if [ -n "${decrypt}" ]; then
-      curl --silent "${url}" 2>/dev/null | openssl aes-256-cbc -d -a
-    else
-      curl --silent "${url}" 2>/dev/null
-    fi
+    curl --silent "${url}" 2> /dev/null |
+      ([ -z "${decrypt}" ] && cat || openssl aes-256-cbc -d -a ${password:+-k "${password}"})
   fi
 }
 
@@ -93,49 +88,36 @@ function help() {
 }
 
 function upload() {
+  ! [ -d ${file} ] && ! [ -f "${file}" ] && { echo 'File should exist' ; return 1; }
+  [ -z "${file}" ] && [ -z "${stdin}" ] && { echo 'File should be provided' ; return 1; }
+  [ -z "${file}" ] && [ -n "${stdin}" ] && [ -z "${slug}" ] && { echo 'Slug should be provided' ; return 1; }
+
   local tmpurl=$(mktemp -t transfer.url.XXXXXXXX)
   trap "rm -f ${tmpurl}" 0
 
   if [ -n "${file}" ]; then
     if [ -d ${file} ]; then
       [ -z "${slug}" ] && slug="$(basename ${file} | sed -e 's/[^a-zA-Z0-9._-]/-/g').tar.gz"
+
       local tmptar=$(mktemp -t transfer.tar.gz.XXXXXXXX)
       trap "rm -f ${tmpurl} ; rm -f ${tmptar}" 0
+
       (cd $(dirname ${file}); tar -zcf ${tmptar} $(basename ${file}))
 
-      if [ -n "${encrypt}" ]; then
-        openssl aes-256-cbc -a -salt -in "${tmptar}" |
-          curl --progress-bar --upload-file - "https://transfer.sh/${slug}" > ${tmpurl}
-      else
-        curl --progress-bar --upload-file "${tmptar}" "https://transfer.sh/${slug}" > ${tmpurl}
-      fi
+      cat "${tmptar}" |
+        ([ -z "${encrypt}" ] && cat || openssl aes-256-cbc -a -salt ${password:+-k "${password}"}) |
+        curl --progress-bar --upload-file - "https://transfer.sh/${slug}" > ${tmpurl}
     elif [ -f "${file}" ]; then
       [ -z "${slug}" ] && slug="$(basename ${file} | sed -e 's/[^a-zA-Z0-9._-]/-/g')"
 
-      if [ -n "${encrypt}" ]; then
-        openssl aes-256-cbc -a -salt -in "${file}" |
-          curl --progress-bar --upload-file - "https://transfer.sh/${slug}" > ${tmpurl}
-      else
-        curl --progress-bar --upload-file "${file}" "https://transfer.sh/${slug}" > ${tmpurl}
-      fi
-    else
-      echo 'File should exist' ; return 1
+      cat "${file}" |
+        ([ -z "${encrypt}" ] && cat || openssl aes-256-cbc -a -salt ${password:+-k "${password}"}) |
+        curl --progress-bar --upload-file - "https://transfer.sh/${slug}" > ${tmpurl}
     fi
   elif [ -n "${stdin}" ]; then
-    if [ -n "${slug}" ]; then
-      if [ -n "${encrypt}" ]; then
-        echo "${stdin}" |
-          openssl aes-256-cbc -a -salt |
-          curl --progress-bar --upload-file - "https://transfer.sh/${slug}" > ${tmpurl}
-      else
-        echo "${stdin}" |
-          curl --progress-bar --upload-file - "https://transfer.sh/${slug}" > ${tmpurl}
-      fi
-    else
-      echo 'Slug should be provided' ; return 1
-    fi
-  else
-    echo 'File should be provided' ; return 1
+    echo "${stdin}" |
+      ([ -z "${encrypt}" ] && cat || openssl aes-256-cbc -a -salt ${password:+-k "${password}"}) |
+      curl --progress-bar --upload-file - "https://transfer.sh/${slug}" > ${tmpurl}
   fi
 
   cat ${tmpurl}
