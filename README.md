@@ -33,6 +33,7 @@ $ ls | transfer upload -s ls.log
 $ # With encryption (symmetric):
 $ transfer upload /path/to/file.log --encrypt
 $ transfer upload /path/to/file.log -e
+$ transfer upload /path/to/file.log --encrypt --password password
 
 $ # With custom slug:
 $ transfer upload /path/to/file.log custom.log
@@ -59,6 +60,7 @@ $ transfer download -u https://transfer.sh/abcXYZ/file.tar.gz | tar xz
 $ # With decryption (symmetric):
 $ transfer download https://transfer.sh/abcXYZ/file.log --decrypt
 $ transfer download https://transfer.sh/abcXYZ/file.log -d
+$ transfer download https://transfer.sh/abcXYZ/file.log --decrypt --password password
 ```
 
 ## Installation
@@ -90,10 +92,12 @@ $ make install bindir=/path/to/bin
 $ transfer --help
 Usage:
   transfer download [<url> [file]]
-    [--decrypt|-d] [--file|-f <file>] [--trace|-x] [--url|-u <url>]
+    [--decrypt|-d] [--file|-f <file>] [--password|-p <password>] [--trace|-x]
+    [--url|-u <url>]
 
   transfer upload [<file> [slug]]
-    [--encrypt|-e] [--file|-f <file>] [--slug|-s <slug>] [--trace|-x]
+    [--encrypt|-e] [--file|-f <file>] [--password|-p <password>] [--slug|-s <slug>]
+    [--trace|-x]
 
 Commands:
   download    Download from transfer.sh to file or piped output
