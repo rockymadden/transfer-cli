@@ -92,7 +92,7 @@ $ make install bindir=/path/to/bin
 $ transfer --help
 Usage:
   transfer download [<url> [file]]
-    [--decrypt|-d] [--file|-f <file>] [--password|-p <password>] [--trace|-x]
+    [--decrypt|-d] [--save|--cat] [--file|-f <file>] [--password|-p <password>] [--trace|-x]
     [--url|-u <url>]
 
   transfer upload [<file> [slug]]
@@ -107,6 +107,10 @@ More Information:
   chat    https://rockymadden-slack.herokuapp.com
   repo    https://github.com/rockymadden/transfer-cli
 ```
+
+### Configurable options
+Change these variables at the top of the script to change the default behaviour.
+  * `use_stdout`: set to `no` to save downloaded files by default instead of writing them to standard output (may be less pipe-friendly). This option can be overridden through the `--cat` or `--save` CLI arguments.
 
 ## License
 ```
