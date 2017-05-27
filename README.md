@@ -40,6 +40,10 @@ $ transfer upload /path/to/file.log custom.log
 $ transfer upload --file=/path/to/file.log --slug=custom.log
 $ transfer upload --file /path/to/file.log --slug custom.log
 $ transfer upload -f /path/to/file.log -s custom.log
+
+$ # Custom lifetime:
+$ transfer upload --max-days 1 /path/to/file.log
+$ transfer upload --max-downloads 10 /path/to/file.log
 ```
 
 __Download samples:__
@@ -96,7 +100,7 @@ Usage:
     [--url|-u <url>]
 
   transfer upload [<file> [slug]]
-    [--encrypt|-e] [--file|-f <file>] [--password|-p <password>] [--slug|-s <slug>]
+    [--encrypt|-e] [--max-days|-y <days>] [--max-downloads|-l <dls>] [--file|-f <file>] [--password|-p <password>] [--slug|-s <slug>]
     [--trace|-x]
 
 Commands:
@@ -107,6 +111,8 @@ More Information:
   chat    https://rockymadden-slack.herokuapp.com
   repo    https://github.com/rockymadden/transfer-cli
 ```
+
+To use a selfhosted instance of transfer.sh, change the `server` variable at the top of the script.
 
 ## License
 ```
