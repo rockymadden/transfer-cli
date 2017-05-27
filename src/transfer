@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+server="https://transfer.sh"
+
 # COMMAND PARSING #################################################################################
 cmd="${1}" ; shift
 
@@ -108,18 +110,18 @@ function upload() {
 
       cat "${tmptar}" |
         ([ -z "${encrypt}" ] && cat || openssl aes-256-cbc -a -salt ${password:+-k "${password}"}) |
-        curl --progress-bar --upload-file - "https://transfer.sh/${slug}" > ${tmpurl}
+        curl --progress-bar --upload-file - "${server}/${slug}" > ${tmpurl}
     elif [ -f "${file}" ]; then
       [ -z "${slug}" ] && slug="$(basename ${file} | sed -e 's/[^a-zA-Z0-9._-]/-/g')"
 
       cat "${file}" |
         ([ -z "${encrypt}" ] && cat || openssl aes-256-cbc -a -salt ${password:+-k "${password}"}) |
-        curl --progress-bar --upload-file - "https://transfer.sh/${slug}" > ${tmpurl}
+        curl --progress-bar --upload-file - "${server}/${slug}" > ${tmpurl}
     fi
   elif [ -n "${stdin}" ]; then
     echo "${stdin}" |
       ([ -z "${encrypt}" ] && cat || openssl aes-256-cbc -a -salt ${password:+-k "${password}"}) |
-      curl --progress-bar --upload-file - "https://transfer.sh/${slug}" > ${tmpurl}
+      curl --progress-bar --upload-file - "${server}/${slug}" > ${tmpurl}
   fi
 
   cat ${tmpurl}
