@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
 
+server="https://transfer.sh"
+
 # COMMAND PARSING #################################################################################
-cmd="${1}" ; shift
+case "${1}" in
+    download|dl|d)  cmd="download" ;;
+    upload|up|ul|u) cmd="upload" ;;
+    *)              cmd="${1}" ;;
+esac
+shift
 
 # STDIN FRIENDLINESS ##############################################################################
 case "${cmd}" in
@@ -15,6 +22,10 @@ while (( "$#" )); do
     --encrypt|-e) encrypt=0 ; shift ;;
     --file=*) file=${1/--file=/''} ; shift ;;
     --file*|-f*) file=${2} ; shift ; shift ;;
+    --max-days=*) max_days=${1/--max-days=/''} ; shift ;;
+    --max-days*|-y*) max_days=${2} ; shift ;  shift ;;
+    --max-downloads=*) max_downloads=${1/--max-downloads=/''} ; shift ;;
+    --max-downloads*|-l*) max_downloads=${2} ; shift ;  shift ;;
     --password=*) password=${1/--password=/''} ; shift ;;
     --password*|-p*) password=${2} ; shift ; shift ;;
     --slug=*) slug=${1/--slug=/''} ; shift ;;
@@ -97,6 +108,10 @@ function upload() {
   local tmpurl=$(mktemp -t transfer.url.XXXXXXXX)
   trap "rm -f ${tmpurl}" 0
 
+  local headers=""
+  [ -n "${max_days}" ] && headers="${headers}-H \"Max-Days: ${max_days}\" "
+  [ -n "${max_downloads}" ] && headers="${headers}-H \"Max-Downloads: ${max_downloads}\""
+
   if [ -n "${file}" ]; then
     if [ -d ${file} ]; then
       [ -z "${slug}" ] && slug="$(basename ${file} | sed -e 's/[^a-zA-Z0-9._-]/-/g').tar.gz"
@@ -108,18 +123,18 @@ function upload() {
 
       cat "${tmptar}" |
         ([ -z "${encrypt}" ] && cat || openssl aes-256-cbc -a -salt ${password:+-k "${password}"}) |
-        curl --progress-bar --upload-file - "https://transfer.sh/${slug}" > ${tmpurl}
+        eval curl --progress-bar "${headers}" --upload-file - "${server}/${slug}" > ${tmpurl}
     elif [ -f "${file}" ]; then
       [ -z "${slug}" ] && slug="$(basename ${file} | sed -e 's/[^a-zA-Z0-9._-]/-/g')"
 
       cat "${file}" |
         ([ -z "${encrypt}" ] && cat || openssl aes-256-cbc -a -salt ${password:+-k "${password}"}) |
-        curl --progress-bar --upload-file - "https://transfer.sh/${slug}" > ${tmpurl}
+        eval curl --progress-bar "${headers}" --upload-file - "${server}/${slug}" > ${tmpurl}
     fi
   elif [ -n "${stdin}" ]; then
     echo "${stdin}" |
       ([ -z "${encrypt}" ] && cat || openssl aes-256-cbc -a -salt ${password:+-k "${password}"}) |
-      curl --progress-bar --upload-file - "https://transfer.sh/${slug}" > ${tmpurl}
+      eval curl --progress-bar "${headers}" --upload-file - "${server}/${slug}" > ${tmpurl}
   fi
 
   cat ${tmpurl}
