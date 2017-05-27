@@ -3,7 +3,12 @@
 server="https://transfer.sh"
 
 # COMMAND PARSING #################################################################################
-cmd="${1}" ; shift
+case "${1}" in
+    download|dl|d)  cmd="download" ;;
+    upload|up|ul|u) cmd="upload" ;;
+    *)              cmd="${1}" ;;
+esac
+shift
 
 # STDIN FRIENDLINESS ##############################################################################
 case "${cmd}" in
